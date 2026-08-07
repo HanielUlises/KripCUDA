@@ -38,7 +38,11 @@ unset(CMAKE_CXX_STANDARD_REQUIRED)
 unset(CMAKE_CXX_EXTENSIONS)
 add_library(kripcuda_device OBJECT
     src/cuda/device_kripke.cu
-    src/cuda/reachability_device.cu)
+    src/cuda/scan.cu
+    src/cuda/state_set_ops.cu
+    src/cuda/reachability_device.cu
+    src/cuda/ctl_device.cu
+    src/cuda/product.cu)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -50,7 +54,10 @@ set_target_properties(kripcuda_device PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_library(kripcuda
     src/model/kripke.cpp
+    src/model/state_set.cpp
     src/exploration/reachability_host.cpp
+    src/verification/formula.cpp
+    src/verification/ctl_host.cpp
     $<TARGET_OBJECTS:kripcuda_device>)
 
 target_link_libraries(kripcuda PUBLIC kripcuda_headers CUDA::cudart)
