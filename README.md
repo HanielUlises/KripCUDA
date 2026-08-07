@@ -275,8 +275,7 @@ three properties shown at the top of this page; `examples/compose.cu` produces
 the scaling table beside them; `examples/fair_cycle.cu` answers the liveness
 question the first of those leaves open, under an explicit fairness assumption.
 
-## Build note
-
-CMake before 3.25 cannot express the CUDA20 dialect for NVCC and derives it from
+> ## Build note
+> CMake before 3.25 cannot express the CUDA20 dialect for NVCC and derives it from
 `CMAKE_CXX_STANDARD`, which fails at generate time. The device sources therefore
 live in a separate object library that requests `-std=c++20` from NVCC directly.
