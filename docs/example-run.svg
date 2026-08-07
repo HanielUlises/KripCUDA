@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="591" height="532" viewBox="0 0 591 532" role="img" aria-label="Terminal session showing the mutual exclusion example explored on a GPU">
+<rect x="0.5" y="0.5" width="590" height="531" rx="10" fill="#0d1117" stroke="#30363d"/>
+<path d="M0.5 10.5a10 10 0 0 1 10-10h570a10 10 0 0 1 10 10v28H0.5z" fill="#161b22"/>
+<line x1="0.5" y1="38.5" x2="590.5" y2="38.5" stroke="#30363d"/>
+<circle cx="22" cy="19" r="5.5" fill="#ff5f57"/>
+<circle cx="42" cy="19" r="5.5" fill="#febc2e"/>
+<circle cx="62" cy="19" r="5.5" fill="#28c840"/>
+<text x="295.5" y="24" text-anchor="middle" fill="#8b949e" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12">KripCUDA — examples/mutual_exclusion</text>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" xml:space="preserve">
+<text x="22" y="66.0"><tspan fill="#7ee787">$ </tspan><tspan fill="#c9d1d9">cmake --build build &amp;&amp; </tspan><tspan fill="#c9d1d9">./build/examples/mutual_exclusion</tspan></text>
+<text x="22" y="108.0"><tspan fill="#8b949e">states: </tspan><tspan fill="#c9d1d9">9</tspan><tspan fill="#8b949e">, transitions: </tspan><tspan fill="#c9d1d9">18</tspan></text>
+<text x="22" y="129.0"><tspan fill="#8b949e">exploring on </tspan><tspan fill="#79c0ff">NVIDIA GeForce RTX 3060 Laptop GPU (sm_86)</tspan></text>
+<text x="22" y="150.0"><tspan fill="#8b949e">reachable: </tspan><tspan fill="#c9d1d9">8</tspan><tspan fill="#8b949e">, depth: </tspan><tspan fill="#c9d1d9">3</tspan></text>
+<text x="22" y="171.0"><tspan fill="#d2a8ff">  (idle, idle)</tspan><tspan fill="#8b949e"> level </tspan><tspan fill="#c9d1d9">0</tspan></text>
+<text x="22" y="192.0"><tspan fill="#d2a8ff">  (idle, wait)</tspan><tspan fill="#8b949e"> level </tspan><tspan fill="#c9d1d9">1</tspan></text>
+<text x="22" y="213.0"><tspan fill="#d2a8ff">  (idle, crit)</tspan><tspan fill="#8b949e"> level </tspan><tspan fill="#c9d1d9">2</tspan></text>
+<text x="22" y="234.0"><tspan fill="#d2a8ff">  (wait, idle)</tspan><tspan fill="#8b949e"> level </tspan><tspan fill="#c9d1d9">1</tspan></text>
+<text x="22" y="255.0"><tspan fill="#d2a8ff">  (wait, wait)</tspan><tspan fill="#8b949e"> level </tspan><tspan fill="#c9d1d9">2</tspan></text>
+<text x="22" y="276.0"><tspan fill="#d2a8ff">  (wait, crit)</tspan><tspan fill="#8b949e"> level </tspan><tspan fill="#c9d1d9">3</tspan></text>
+<text x="22" y="297.0"><tspan fill="#d2a8ff">  (crit, idle)</tspan><tspan fill="#8b949e"> level </tspan><tspan fill="#c9d1d9">2</tspan></text>
+<text x="22" y="318.0"><tspan fill="#d2a8ff">  (crit, wait)</tspan><tspan fill="#8b949e"> level </tspan><tspan fill="#c9d1d9">3</tspan></text>
+<text x="22" y="339.0"><tspan fill="#d2a8ff">  (crit, crit)</tspan><tspan fill="#8b949e"> level </tspan><tspan fill="#ff7b72">-1</tspan><tspan fill="#8b949e">   unreachable</tspan></text>
+<text x="22" y="360.0"><tspan fill="#e3b341">AG !(crit0 &amp;&amp; crit1)</tspan><tspan fill="#8b949e">: </tspan><tspan fill="#7ee787">holds</tspan></text>
+<text x="22" y="402.0"><tspan fill="#7ee787">$ </tspan><tspan fill="#c9d1d9">ctest --test-dir build --output-on-failure</tspan></text>
+<text x="22" y="444.0"><tspan fill="#8b949e">1/2 Test #1: test_kripke ......................   </tspan><tspan fill="#7ee787">Passed</tspan><tspan fill="#8b949e">    0.00 sec</tspan></text>
+<text x="22" y="465.0"><tspan fill="#8b949e">2/2 Test #2: test_reachability ................   </tspan><tspan fill="#7ee787">Passed</tspan><tspan fill="#8b949e">    0.48 sec</tspan></text>
+<text x="22" y="507.0"><tspan fill="#7ee787">100% tests passed</tspan><tspan fill="#8b949e">, 0 tests failed out of 2</tspan></text>
+</g></svg>
