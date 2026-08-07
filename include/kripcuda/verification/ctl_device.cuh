@@ -1,7 +1,7 @@
 #pragma once
 
-#include "kripcuda/cuda/device_kripke.hpp"
-#include "kripcuda/cuda/device_state_set.hpp"
+#include "kripcuda/cuda/device_kripke.cuh"
+#include "kripcuda/cuda/device_state_set.cuh"
 #include "kripcuda/verification/ctl.hpp"
 
 #include <unordered_map>

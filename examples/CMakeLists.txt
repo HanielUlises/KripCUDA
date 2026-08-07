@@ -11,3 +11,8 @@ add_executable(compose compose.cu)
 target_link_libraries(compose PRIVATE KripCUDA::kripcuda)
 target_compile_options(compose PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:-std=c++20 --expt-relaxed-constexpr>)
+
+add_executable(fair_cycle fair_cycle.cu)
+target_link_libraries(fair_cycle PRIVATE KripCUDA::kripcuda)
+target_compile_options(fair_cycle PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:-std=c++20 --expt-relaxed-constexpr>)

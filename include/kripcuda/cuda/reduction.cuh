@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kripcuda/cuda/launch.hpp"
+#include "kripcuda/cuda/launch.cuh"
 
 #include <cstdint>
 

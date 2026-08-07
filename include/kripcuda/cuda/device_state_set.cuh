@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kripcuda/cuda/device_buffer.hpp"
+#include "kripcuda/cuda/device_buffer.cuh"
 #include "kripcuda/state_set.hpp"
 
 namespace kripcuda {

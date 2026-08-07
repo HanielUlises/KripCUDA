@@ -1,7 +1,7 @@
-#include "kripcuda/cuda/launch.hpp"
-#include "kripcuda/cuda/reduction.hpp"
-#include "kripcuda/cuda/stream.hpp"
-#include "kripcuda/verification/ctl_device.hpp"
+#include "kripcuda/cuda/launch.cuh"
+#include "kripcuda/cuda/reduction.cuh"
+#include "kripcuda/cuda/stream.cuh"
+#include "kripcuda/verification/ctl_device.cuh"
 
 #include <stdexcept>
 

@@ -6,11 +6,11 @@
 /// composition is a product of device-resident models, and the explorer and the
 /// CTL evaluator both consume it in place.
 
-#include "kripcuda/cuda/product.hpp"
+#include "kripcuda/cuda/product.cuh"
 #include "kripcuda/cuda/runtime.hpp"
-#include "kripcuda/cuda/stream.hpp"
-#include "kripcuda/exploration/reachability_device.hpp"
-#include "kripcuda/verification/ctl_device.hpp"
+#include "kripcuda/cuda/stream.cuh"
+#include "kripcuda/exploration/reachability_device.cuh"
+#include "kripcuda/verification/ctl_device.cuh"
 
 #include <cstdio>
 

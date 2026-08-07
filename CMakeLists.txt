@@ -42,7 +42,10 @@ add_library(kripcuda_device OBJECT
     src/cuda/state_set_ops.cu
     src/cuda/reachability_device.cu
     src/cuda/ctl_device.cu
-    src/cuda/product.cu)
+    src/cuda/product.cu
+    src/cuda/transpose.cu
+    src/cuda/scc_device.cu
+    src/cuda/fairness_device.cu)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)

@@ -1,6 +1,6 @@
-#include "kripcuda/cuda/device_kripke.hpp"
-#include "kripcuda/cuda/launch.hpp"
-#include "kripcuda/cuda/reduction.hpp"
+#include "kripcuda/cuda/device_kripke.cuh"
+#include "kripcuda/cuda/launch.cuh"
+#include "kripcuda/cuda/reduction.cuh"
 #include "kripcuda/cuda/runtime.hpp"
 
 #include <stdexcept>

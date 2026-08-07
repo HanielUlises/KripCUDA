@@ -94,6 +94,38 @@ The specification checked at each size is a conjunction of one `AG` per
 component. Because formulas are shared DAGs and the evaluator memoises on node
 identity, the common subformulas of that conjunction are evaluated once.
 
+## `fair_cycle`. fairness on the device
+
+Picks up exactly where the `AG AF crit0` counterexample above leaves off. The
+run that starves process 0 is a legitimate execution of the model, so ruling it
+out is not a matter of fixing the protocol but of stating the assumption under
+which the liveness claim is meant to hold. This example states it as a
+generalised Büchi condition — every process enters its critical section
+infinitely often — and asks whether the composition admits an execution
+satisfying it.
+
+Answering that is a cycle question rather than a fixpoint over the labelling: a
+fair execution exists exactly when some strongly connected component lies on a
+cycle and meets every constraint. The decomposition runs on the GPU by parallel
+colouring, preceded by trimming, over the transposed relation built there as
+well. Requires a CUDA device.
+
+```
+$ ./build/examples/fair_cycle
+3 component(s): 729 states, 4274 transitions
+  all processes progress:            yes  witnesses      729 / 729  components 8 (7 cyclic, largest 512)
+  any infinite execution:            yes  witnesses      729 / 729  components 8 (7 cyclic, largest 512)
+  unsatisfiable assumption:          no   witnesses        0 / 729  components 8 (7 cyclic, largest 512)
+```
+
+The witness column counts the states from which a fair execution starts, which
+is EG<sub>fair</sub> `true` — the fair components closed backwards inside the
+region, the same least fixpoint the unfair evaluator uses for `E[φ U ψ]`. Under
+the progress assumption every state qualifies, which is the formal statement
+that the protocol starves nobody once the scheduler is fair. The unsatisfiable
+assumption is the control: no component can meet an empty constraint, so no
+state does.
+
 ## Notes
 
 `mutual-exclusion-model.svg` is generated rather than drawn: the script derives

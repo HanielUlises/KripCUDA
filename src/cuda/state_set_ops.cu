@@ -1,6 +1,6 @@
-#include "kripcuda/cuda/device_state_set.hpp"
-#include "kripcuda/cuda/launch.hpp"
-#include "kripcuda/cuda/reduction.hpp"
+#include "kripcuda/cuda/device_state_set.cuh"
+#include "kripcuda/cuda/launch.cuh"
+#include "kripcuda/cuda/reduction.cuh"
 
 #include <stdexcept>
 

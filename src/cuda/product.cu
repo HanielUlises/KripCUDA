@@ -1,6 +1,6 @@
-#include "kripcuda/cuda/launch.hpp"
-#include "kripcuda/cuda/product.hpp"
-#include "kripcuda/cuda/scan.hpp"
+#include "kripcuda/cuda/launch.cuh"
+#include "kripcuda/cuda/product.cuh"
+#include "kripcuda/cuda/scan.cuh"
 
 #include <limits>
 #include <stdexcept>

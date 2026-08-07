@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kripcuda/cuda/error.hpp"
+#include "kripcuda/cuda/error.cuh"
 
 #include <utility>
 

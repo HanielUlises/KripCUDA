@@ -160,6 +160,23 @@ been on the host and that the explorer and the evaluator consume in place: the
 run above composes six components and verifies half a million states without the
 transition relation ever crossing the bus.
 
+**Cycles and fairness.** Liveness under a fairness assumption is not a fixpoint
+over the labelling but a question about cycles: a fair execution exists exactly
+when some strongly connected component lies on a cycle and meets every
+constraint. The decomposition runs on the device by parallel colouring — every
+live state takes the largest state index that can reach it, and a state that
+keeps its own colour is a root whose colour class, closed backwards, is one
+complete component. Colours propagate as a gather over the transpose, so no pass
+writes an entry it does not own; the backward closure is a gather over the
+forward relation, the same pre-image the model checker already computes. Each
+round is preceded by trimming, which removes the states with no live successor
+or no live predecessor — in a concurrent model that is most of them, and each one
+removed is a component the colouring never has to look at. The transpose that
+trimming needs is the one place the library builds *Rᵀ*, and it too is built on
+the GPU: in-degrees counted with one atomic per edge, scanned into row offsets,
+filled by a second pass. ⟦EG_fair φ⟧ then falls out as the fair components of the
+subgraph induced by φ, closed backwards inside it.
+
 ## Architecture
 
 The library keeps model representation, state exploration, property
@@ -167,11 +184,12 @@ verification, CUDA execution, and utilities in separate compilation units and
 namespaces, with the coupling running in one direction only. Kernels receive
 trivially copyable views of device-resident data; ownership sits in RAII handles
 on the host buffers, streams, events, scan workspaces and every CUDA API
-result is checked and surfaced as a C++ exception. Public headers are plain
-C++20 except for those under `cuda/`, which are meant for translation units
-compiled by NVCC; the CUDA-availability queries are deliberately exposed through
-a header that includes no CUDA header at all, so host-only consumers never
-inherit the toolkit's include path.
+result is checked and surfaced as a C++ exception. The extension says which is
+which: a `.hpp` header is plain C++20 and a `.cuh` header carries device code or
+CUDA runtime types and is meant for translation units compiled by NVCC. The
+CUDA-availability queries are deliberately exposed through a `.hpp` that
+includes no CUDA header at all, so host-only consumers never inherit the
+toolkit's include path.
 
 Every device computation has a sequential counterpart implementing the same
 schedule step for step, and the suite holds them against each other on
@@ -241,8 +259,8 @@ back. A `DeviceCtlEvaluator` kept alive across several formulas reuses both the
 model and the subformulas already evaluated:
 
 ```cpp
-#include "kripcuda/cuda/product.hpp"
-#include "kripcuda/verification/ctl_device.hpp"
+#include "kripcuda/cuda/product.cuh"
+#include "kripcuda/verification/ctl_device.cuh"
 
 Stream stream;
 const DeviceKripke component(model, stream);
@@ -254,7 +272,8 @@ const CtlResult verdict = evaluator.check(safety);
 
 `examples/mutual_exclusion.cpp` builds the two-process model and checks the
 three properties shown at the top of this page; `examples/compose.cu` produces
-the scaling table beside them.
+the scaling table beside them; `examples/fair_cycle.cu` answers the liveness
+question the first of those leaves open, under an explicit fairness assumption.
 
 ## Build note
 

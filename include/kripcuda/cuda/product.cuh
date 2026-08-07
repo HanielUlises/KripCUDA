@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kripcuda/cuda/device_kripke.hpp"
+#include "kripcuda/cuda/device_kripke.cuh"
 
 namespace kripcuda {
 
