@@ -1,9 +1,11 @@
 /// Builds a two-process mutual exclusion model, explores its reachable state
-/// space on the GPU, and checks the safety property AG !(crit0 && crit1) by
-/// inspecting the reachable states.
+/// space on the GPU, and verifies three CTL properties over it: safety, the
+/// possibility of entering the critical section, and the liveness property that
+/// fails for want of a fairness constraint.
 
 #include "kripcuda/cuda/runtime.hpp"
 #include "kripcuda/exploration/reachability.hpp"
+#include "kripcuda/verification/ctl.hpp"
 
 #include <iostream>
 
@@ -79,18 +81,37 @@ int main() {
     std::cout << "reachable: " << reachable.reachableCount << ", depth: " << reachable.maxLevel
               << '\n';
 
-    bool safe = true;
     for (StateId state = 0; state < model.stateCount(); ++state) {
         const StateId pc0 = state / kLocations;
         const StateId pc1 = state % kLocations;
         std::cout << "  (" << locationName(pc0) << ", " << locationName(pc1) << ") level "
                   << reachable.levels[state] << '\n';
-        if (reachable.isReachable(state) && model.holds(state, kCritical0) &&
-            model.holds(state, kCritical1)) {
-            safe = false;
-        }
     }
 
-    std::cout << "AG !(crit0 && crit1): " << (safe ? "holds" : "violated") << '\n';
-    return safe ? 0 : 1;
+    const bool onDevice = hasCudaDevice();
+    const auto check = [&](const ctl::Formula& formula) {
+        return onDevice ? checkCtlDevice(model, formula) : checkCtlHost(model, formula);
+    };
+
+    const ctl::Formula critical0 = ctl::atom(kCritical0);
+    const ctl::Formula critical1 = ctl::atom(kCritical1);
+
+    const CtlResult safety = check(ctl::AG(!(critical0 && critical1)));
+    const CtlResult possible = check(ctl::AG(ctl::EF(critical0)));
+    const CtlResult liveness = check(ctl::AG(ctl::AF(critical0)));
+
+    const auto report = [](const char* text, const CtlResult& result) {
+        std::cout << "  " << text << ": " << (result.holdsInAllInitialStates ? "holds" : "fails")
+                  << " (" << result.satisfying.count() << " states, " << result.iterations
+                  << " iterations)\n";
+    };
+
+    std::cout << "properties:\n";
+    report("AG !(crit0 && crit1)", safety);
+    report("AG EF crit0         ", possible);
+    report("AG AF crit0         ", liveness);
+    std::cout << "  liveness fails without a fairness constraint: nothing forces\n"
+                 "  the scheduler to ever pick a waiting process.\n";
+
+    return safety.holdsInAllInitialStates ? 0 : 1;
 }
