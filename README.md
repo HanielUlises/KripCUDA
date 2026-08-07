@@ -45,7 +45,7 @@ dense array.
 The library enforces the structural invariants of the definition at construction
 time rather than trusting the caller: totality of *R* is checked, duplicate
 transitions are removed, and successor lists are sorted, which makes the CSR
-layout — and therefore every kernel launch configuration derived from it — a
+layout (and therefore every kernel launch configuration derived from it) a
 function of the model alone and not of the order in which the caller happened to
 supply its transitions.
 
@@ -114,22 +114,71 @@ once, and then repeatedly traversed by kernels that never transfer it back:
 host–device traffic per verification run is one small scalar per iteration for
 the termination test, plus one result vector at the end.
 
+## The device layer
+
+Everything above is realised by a device layer that is the bulk of the library.
+
+**Set algebra.** A state set is a packed bitset whose word is 32 bits wide, so
+that one warp covers exactly one word. Every set-producing kernel evaluates its
+predicate one state per lane and assembles the word with a single
+`__ballot_sync` no atomics, no shared memory, no scatter. Lanes whose state
+lies past |*S*| contribute a false predicate, which is precisely what keeps the
+padding bits of the last word at zero; the reductions that count, compare and
+test inclusion depend on that invariant, and complement is the one operation
+that must restore it explicitly. Union, intersection, difference and assignment
+are one templated elementwise kernel, and the reductions collapse within a warp
+before a single lane touches global memory.
+
+**Pre-image.** ⟦EX φ⟧ and the body of both fixpoints are the same gather: each
+state inspects its own successor list and reports whether any successor lies in
+the operand. Computing the pre-image forwards rather than transposing the
+relation is what lets the framework store *R* once there is no *Rᵀ* anywhere,
+no scatter, and no atomic traffic in the hot loop. The fixpoint step is fused
+into a single kernel, `next = base ∪ (mask ∩ pre∃(current))`, with a null
+operand denoting the neutral element, so EU and EG are that same kernel launched
+from different initial sets and converging from opposite directions.
+
+**Traversal.** Breadth-first exploration keeps an explicit frontier queue and
+appends to it with one atomic per warp rather than one per claim: each lane
+buffers its claims in registers, the warp prefix-sums the per-lane counts, and a
+single lane reserves the range. Whether a state is expanded by one thread or by
+a whole warp is decided from the model's degree distribution, which the device
+computes by reduction when the model is uploaded thread-per-state while
+successor lists are short, warp-per-state once they exceed a warp, where a lone
+lane would otherwise serialise a long list while its siblings idle.
+
+**Composition.** Products of two device-resident models are built entirely on
+the GPU: one kernel counts the degree of every product state, a device-wide
+exclusive scan in reduce-then-scan form turns those counts into row offsets, and
+a second kernel fills the columns. Because the index map (*s*₁, *s*₂) ↦
+*s*₁·|*S*₂| + *s*₂ is monotone in each component, a linear merge of the two
+sorted successor lists emits the interleaving product already sorted, and the
+one transition a product state can acquire twice both components self-looping
+is subtracted when the degrees are counted. Labels are concatenated by a
+bit-level shift of a multi-word bitset. The result is a model that has never
+been on the host and that the explorer and the evaluator consume in place: the
+run above composes six components and verifies half a million states without the
+transition relation ever crossing the bus.
+
 ## Architecture
 
 The library keeps model representation, state exploration, property
 verification, CUDA execution, and utilities in separate compilation units and
-namespaces, with the coupling running in one direction only. Kernels receive a
-trivially copyable view of the device-resident structure; ownership of device
-memory sits in RAII handles on the host; every CUDA API result is checked and
-surfaced as a C++ exception. Public headers are plain C++20 except for those
-under `cuda/`, which are meant for translation units compiled by NVCC — the
-CUDA-availability queries are deliberately exposed through a header that
-includes no CUDA header at all, so host-only consumers never inherit the
-toolkit's include path.
+namespaces, with the coupling running in one direction only. Kernels receive
+trivially copyable views of device-resident data; ownership sits in RAII handles
+on the host buffers, streams, events, scan workspaces and every CUDA API
+result is checked and surfaced as a C++ exception. Public headers are plain
+C++20 except for those under `cuda/`, which are meant for translation units
+compiled by NVCC; the CUDA-availability queries are deliberately exposed through
+a header that includes no CUDA header at all, so host-only consumers never
+inherit the toolkit's include path.
 
-Implemented today: the model representation and its builder, reachability
-analysis on both host and device, and the CUDA execution layer. The CTL
-operators above build directly on the same device model view and label encoding.
+Every device computation has a sequential counterpart implementing the same
+schedule step for step, and the suite holds them against each other on
+hand-checkable models, on pseudo-random ones, and on randomly generated CTL
+formulas. The two evaluators are required to agree not only on the satisfying
+set but on the number of fixpoint iterations, so a disagreement can only come
+from the parallel implementation and never from a difference in semantics.
 
 ## Building
 
@@ -142,14 +191,9 @@ ctest --test-dir build --output-on-failure
 ```
 
 `KRIPCUDA_CUDA_ARCHITECTURES` (default `75;86;89`) selects the generated device
-code; set it to the compute capability of the target GPU. The device tests and
-the example fall back to the host path when no CUDA device is visible, so the
-suite is meaningful on machines without one.
-
-The suite validates the device explorer against the sequential reference on a
-hand-checkable concurrency model, on pseudo-random models with reachable and
-unreachable regions, and on a deep chain that exercises many BFS levels with a
-minimal frontier.
+code; set it to the compute capability of the target GPU. The device suites skip
+themselves and the host-facing example falls back to the sequential path when no
+CUDA device is visible, so the suite is meaningful on machines without one.
 
 ## Usage
 
@@ -158,6 +202,7 @@ an immutable `KripkeStructure`:
 
 ```cpp
 #include "kripcuda/exploration/reachability.hpp"
+#include "kripcuda/verification/ctl.hpp"
 
 using namespace kripcuda;
 
@@ -177,8 +222,39 @@ order in which states are claimed, even though the frontier order on the GPU is
 nondeterministic. `computeReachabilityHost` is the sequential reference and can
 be called on the same model when no device is available.
 
-`examples/mutual_exclusion.cpp` builds the two-process model shown at the top of
-this page and checks `AG !(crit0 && crit1)` over its reachable fragment.
+Formulas are values built from an adequate basis, with the universal operators
+derived by the standard identities. Repeated subformulas are shared, and the
+evaluators memoise on node identity:
+
+```cpp
+using namespace kripcuda::ctl;
+
+const Formula safety = AG(!(atom(critical0) && atom(critical1)));
+const CtlResult result = checkCtlDevice(model, safety);
+
+result.holdsInAllInitialStates;   // M ⊨ φ
+result.satisfying.count();        // |⟦φ⟧|
+```
+
+Larger models are composed on the device and checked without ever being brought
+back. A `DeviceCtlEvaluator` kept alive across several formulas reuses both the
+model and the subformulas already evaluated:
+
+```cpp
+#include "kripcuda/cuda/product.hpp"
+#include "kripcuda/verification/ctl_device.hpp"
+
+Stream stream;
+const DeviceKripke component(model, stream);
+const DeviceKripke composed = buildPower(component, 6, ProductKind::Interleaving, stream);
+
+DeviceCtlEvaluator evaluator(composed, stream);
+const CtlResult verdict = evaluator.check(safety);
+```
+
+`examples/mutual_exclusion.cpp` builds the two-process model and checks the
+three properties shown at the top of this page; `examples/compose.cu` produces
+the scaling table beside them.
 
 ## Build note
 

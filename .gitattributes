@@ -8,5 +8,4 @@
 *.txt   text
 *.cmake text
 
-# Generated illustrations: shown in the README, not part of the language stats.
 docs/*.svg linguist-documentation

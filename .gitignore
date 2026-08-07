@@ -1,3 +1,7 @@
 build/
 compile_commands.json
 .cache/
+
+# Diagram generator: the SVG it produces is tracked, the script is not.
+examples/generate_model_diagram.py
+__pycache__/
