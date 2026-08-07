@@ -68,6 +68,16 @@ public:
         return host;
     }
 
+    /// Device-to-device copy into a fresh allocation.
+    [[nodiscard]] DeviceBuffer clone(cudaStream_t stream = nullptr) const {
+        DeviceBuffer copy(count_);
+        if (count_ != 0) {
+            KRIPCUDA_CHECK(cudaMemcpyAsync(copy.data_, data_, sizeBytes(),
+                                           cudaMemcpyDeviceToDevice, stream));
+        }
+        return copy;
+    }
+
     void fillBytes(int value, cudaStream_t stream = nullptr) {
         KRIPCUDA_CHECK(cudaMemsetAsync(data_, value, sizeBytes(), stream));
     }

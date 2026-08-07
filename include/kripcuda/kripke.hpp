@@ -46,6 +46,16 @@ public:
 
     [[nodiscard]] bool holds(StateId state, PropositionId proposition) const;
 
+    /// Assembles a structure from arrays that already satisfy the invariants
+    /// above. Prefer KripkeBuilder; this entry point exists for constructions
+    /// that establish the invariants themselves — the device-side product, for
+    /// one — where re-sorting on the host would dominate the cost.
+    [[nodiscard]] static KripkeStructure fromValidatedCsr(std::vector<EdgeIndex> rowOffsets,
+                                                          std::vector<StateId> columns,
+                                                          std::vector<StateId> initialStates,
+                                                          std::vector<LabelWord> labels,
+                                                          std::uint32_t propositionCount);
+
     /// Name of an atomic proposition, or an empty view if none was supplied.
     [[nodiscard]] std::string_view propositionName(PropositionId proposition) const;
 

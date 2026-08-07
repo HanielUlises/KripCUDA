@@ -22,6 +22,29 @@ std::string_view KripkeStructure::propositionName(PropositionId proposition) con
     return proposition_names_[proposition];
 }
 
+KripkeStructure KripkeStructure::fromValidatedCsr(std::vector<EdgeIndex> rowOffsets,
+                                                  std::vector<StateId> columns,
+                                                  std::vector<StateId> initialStates,
+                                                  std::vector<LabelWord> labels,
+                                                  std::uint32_t propositionCount) {
+    if (rowOffsets.empty()) {
+        throw std::invalid_argument("KripkeStructure::fromValidatedCsr: empty row offsets");
+    }
+    if (rowOffsets.back() != columns.size()) {
+        throw std::invalid_argument(
+            "KripkeStructure::fromValidatedCsr: row offsets do not match the column count");
+    }
+
+    KripkeStructure structure;
+    structure.row_offsets_ = std::move(rowOffsets);
+    structure.columns_ = std::move(columns);
+    structure.initial_states_ = std::move(initialStates);
+    structure.labels_ = std::move(labels);
+    structure.proposition_names_.resize(propositionCount);
+    structure.proposition_count_ = propositionCount;
+    return structure;
+}
+
 KripkeBuilder::KripkeBuilder(StateId stateCount, std::uint32_t propositionCount)
     : state_count_(stateCount),
       proposition_count_(propositionCount),
